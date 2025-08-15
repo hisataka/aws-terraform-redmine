@@ -3,5 +3,5 @@ resource "aws_ecr_repository" "redmine" {
 }
 
 output "ecr_repository_uri" {
-    value = "aws_ecr_repository.redmine.repository_url"
+    value = aws_ecr_repository.redmine.repository_url
 }
