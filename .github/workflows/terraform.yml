@@ -30,6 +30,15 @@ jobs:
             - name: Terraform Init
               run: terraform init
 
+            - name: Terraform Import ECR if exists
+              run: |
+                if aws ecr describe-repositories --repository-names iacredmine --region ap-northeast-1; then
+                    echo "Repository exists, importing to Terraform state..."
+                    terraform import aws_ecr_repository.redmine iacredmine
+                else
+                    echo "Repository does not exists, will be created by apply"
+                fi
+
             - name: Terraform Plan
               run: terraform plan
 
