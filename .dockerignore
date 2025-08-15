@@ -1,0 +1,22 @@
+# Git 関連
+.git
+.gitignore
+
+# Terraform 関連
+*.tfstate
+*.tfstate.backup
+.terraform/
+*.tfvars
+
+# Docker 関連の一時ファイル
+*.log
+tmp/
+**/tmp/
+**/log/
+
+# Redmine の不要ファイル
+files/
+backups/
+bundle/
+vendor/bundle/
+node_modules/

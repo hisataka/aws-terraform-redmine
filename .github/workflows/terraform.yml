@@ -8,6 +8,8 @@ on:
 jobs:
     terraform:
         runs-on: ubuntu-latest
+        outputs:
+            ecr_uri: ${{ steps.get_ecr_uri.outputs.ecr_uri }}
 
         steps:
             - name: Checkout repository
@@ -34,3 +36,34 @@ jobs:
             - name: Terraform Apply
               if: github.ref == 'refs/heads/main'
               run: terraform apply -auto-approve
+
+            - name: Get ECR URI
+              id: get_ecr_uri
+              run: echo "ecr_uri=$(terraform output -raw ecr_repository_uri)" >> $GITHUB_OUTPUT
+
+    docker:
+        runs-on: ubuntu-latest
+        needs: terraform
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4.3.1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ap-northeast-1
+
+            - name: Login to ECR
+              run: |
+                aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin ${{ needs.terraform.outputs.ecr_uri }}
+
+            - name: Build Docker image
+              run: docker build -t iacredmine .
+
+            - name: Tag and Push Docker image
+              run: |
+                docker tag iacredmine:latest ${{ needs.terraform.outputs.ecr_uri }}:latest
+                docker push ${{ needs.terraform.outputs.ecr_uri }}:latest
